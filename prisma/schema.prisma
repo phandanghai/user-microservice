@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Logger {
+  id           String @id @default(uuid())
+  service      String
+  correlationId String
+  traceId      String
+  message      String
+  level        String
+  createdAt    DateTime @default(now())
+}
+
+enum RoleUser {
+  ADMIN
+  USER
+}
+
+enum StatusUser {
+  ACTIVE
+  INACTIVE
+}
+
+model User {
+  id                 String             @id @default(uuid())
+  username           String             @unique
+  email              String             @unique
+  password           String
+  firstName          String
+  lastName           String
+  avatar             String?
+  country            String?
+  city               String?
+  address            String?
+  region             String?
+  phoneNumber        String?
+  lastUpdatePassword DateTime           @default(now())
+  role               RoleUser           @default(USER)
+  status             StatusUser         @default(ACTIVE)
+  balance            Float              @default(0)
+  authentication     Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
