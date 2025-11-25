@@ -47,7 +47,7 @@ export interface RMQPatterns {
     };
     GET: {
       pattern: string;
-      payload: { userId: string };
+      payload: { field: string; value: string };
       response: User;
       description: string;
     };

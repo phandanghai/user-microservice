@@ -1,10 +1,11 @@
-import { Controller, Logger } from '@nestjs/common';
+import { BadRequestException, Controller, Logger } from '@nestjs/common';
 import { UserService } from './user.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { RMQ_PATTERNS } from '@/pattern';
-import { type CreateUserDto } from './schema/user.schema';
-import { Payload, Meta } from './decorators/rmq-payload.decorator';
-import { type RMQRequestMeta } from '@/interfaces';
+import { UserValidationSchema } from '../schema/user.schema';
+import { Payload } from '../decorators/rmq-payload.decorator';
+import { ZodValidationPipe } from '@/zod/zod.validation.pipe';
+import { HttpToRpcError } from '@/decorators/rpc-exception-handler.decorator';
 
 @Controller('')
 export class AppController {
@@ -12,18 +13,38 @@ export class AppController {
 
   constructor(private readonly userService: UserService) {}
 
+  @HttpToRpcError()
   @MessagePattern(RMQ_PATTERNS.USER.TEST.pattern)
-  async testMessage(@Payload() data: any, @Meta() meta: RMQRequestMeta) {
-    this.logger.log('TEST MESSAGE RECEIVED:', data);
-    this.logger.log('Meta:', meta);
-    return { success: true, message: 'Test successful' };
+  async testMessage() {
+    throw new BadRequestException('Test failed from user service');
   }
 
-  @MessagePattern(RMQ_PATTERNS.USER.CREATE_NEW_USER.pattern)
+  // TODO
+  @MessagePattern('USER.CREATE_NEW_USER')
   async createNewUser(
-    @Payload() createUserDto: CreateUserDto,
-    @Meta() meta: RMQRequestMeta,
+    @Payload(new ZodValidationPipe(UserValidationSchema))
+    createUserDto: {
+      username: string;
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+    },
   ) {
-    return await this.userService.createNewUserService(createUserDto);
+    this.logger.log(
+      'User Controller send request to service to create new user ...',
+    );
+    return this.userService.createNewUserService({ ...createUserDto });
+  }
+
+  @MessagePattern(RMQ_PATTERNS.USER.GET.pattern)
+  @HttpToRpcError()
+  async getDetailUser(
+    @Payload() { field, value }: { field: string; value: string },
+  ) {
+    this.logger.log(
+      'User Controller send request to service get detail user ...',
+    );
+    return await this.userService.findOne({ field, value });
   }
 }

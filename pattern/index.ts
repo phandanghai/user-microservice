@@ -1,4 +1,5 @@
 import { RMQPatterns } from '@/interfaces';
+import { User } from '@/interfaces/model.interface';
 
 export const RMQ_PATTERNS: RMQPatterns = {
   USER: {
@@ -22,9 +23,9 @@ export const RMQ_PATTERNS: RMQPatterns = {
     },
     GET: {
       pattern: 'USER.GET',
-      payload: { userId: '' },
-      response: {} as any,
-      description: 'Get user by ID',
+      payload: { field: '', value: '' },
+      response: {} as User,
+      description: 'Get user by field and value',
     },
   },
 };

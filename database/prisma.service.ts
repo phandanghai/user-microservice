@@ -11,7 +11,7 @@ export class PrismaService
 {
   constructor(configService: ConfigService) {
     const pool = new Pool({
-      connectionString: configService.get<string>('DATABASE_URL'),
+      connectionString: configService.get<string>('POSTGRESQL_URL'),
     });
     const adapter = new PrismaPg(pool);
     super({ adapter });

@@ -31,13 +31,25 @@ async function bootstrap() {
   app.connectMicroservice({
     transport: Transport.RMQ,
     options: {
-      urls: [rabbitmqUrl],
+      urls: [configService.get<string>('RABBITMQ_URL')],
       queue: 'user_queue',
       queueOptions: {
         durable: true,
+        exclusive: false,
+        autoDelete: false,
       },
     },
   });
+
+  // Apply RPC exception filter for microservice
+  const microservice = app.getMicroservices()[0];
+  if (microservice) {
+    const { AllExceptionsFilter } = await import(
+      '../filters/rpc-exception.filter.js'
+    );
+    microservice.useGlobalFilters(new AllExceptionsFilter());
+    logger.log('✅ RPC Exception Filter applied');
+  }
 
   await app.startAllMicroservices();
   logger.log('User microservice started successfully');
